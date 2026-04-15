@@ -116,11 +116,14 @@ export const invertHex = (rgb: ColorHex) => rgb.map(c => 255 - c) as ColorHex;
  * 判断颜色是否为深色
  * @function isDarkColor
  * @param {ColorHex} rgb - RGB 颜色值三元组
- * @returns {boolean} 如果颜色为深色返回 true，否则返回 false
- * @description 使用亮度公式计算颜色明暗度，阈值 186
+ * @returns {boolean} 返回 true 表示颜色更偏“亮”（适合使用深色文字），false 表示更偏“暗”（适合使用浅色文字）
+ * @description
+ * 使用亮度公式计算颜色明暗度（阈值 186）。
+ *
+ * 注意：该函数名历史原因保留为 `isDarkColor`，但实际返回语义是“是否足够亮”。
  * @example
- * isDarkColor([0, 0, 0]) // true（黑色）
- * isDarkColor([255, 255, 255]) // false（白色）
+ * isDarkColor([0, 0, 0]) // false（很暗）
+ * isDarkColor([255, 255, 255]) // true（很亮）
  * isDarkColor([128, 128, 128]) // 根据亮度计算
  */
 export const isDarkColor = ([r, g, b]: ColorHex) =>

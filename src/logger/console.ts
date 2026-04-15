@@ -109,6 +109,13 @@ const TYPEOF_SIMPLE_VALUE = [
   'undefined'
 ];
 
+/**
+ * 为 Node.js 环境的“级别色”处理消息数组。
+ *
+ * 规则：
+ * - 基本类型（含 null/undefined）会被包裹颜色（ANSI）
+ * - 复杂对象保持原样，让控制台以对象形式渲染
+ */
 const processColoringLevelChunk_Node = (
   level: LogLevel,
   list: unknown[]
@@ -129,6 +136,13 @@ const processColoringLevelChunk_Node = (
   return result;
 };
 
+/**
+ * 为浏览器环境的“级别色”处理消息数组。
+ *
+ * 规则：
+ * - 基本类型会生成 `%c...` + style 的一组参数
+ * - 复杂对象使用 `%o` 交给 DevTools 结构化展示
+ */
 const processColoringLevelChunk_Browser = (
   level: LogLevel,
   list: unknown[]
@@ -164,6 +178,16 @@ let processColoringLevelChunk = (
   return processColoringLevelChunk(level, contents);
 };
 
+/**
+ * 构造 text 格式输出的参数列表（chunks）。
+ *
+ * 输出结构大致为：
+ * - 可选：命名空间前缀（彩色或纯文本）
+ * - 必选：消息内容（按 level 渲染色彩）
+ * - 可选：tags / extra（按配置与 transformer 追加）
+ *
+ * @private
+ */
 const buildChunksForText = (
   context: LoggerContext,
   level: LogLevel,

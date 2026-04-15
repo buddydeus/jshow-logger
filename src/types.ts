@@ -47,8 +47,16 @@ export const LogLevels = ['error', 'warn', 'info', 'debug'] as const;
  */
 export type LogLevel = (typeof LogLevels)[number];
 
+/**
+ * 内置“功能型输出”集合。
+ *
+ * 说明：这些并不是新的日志级别，而是为了更好的可读性提供的语义化输出方式：
+ * - `label`: 用于强调/标签化输出（默认使用 ANSI 索引色 `ColorIdxDefault.label`）
+ * - `step`: 用于步骤/流程输出（默认使用 ANSI 索引色 `ColorIdxDefault.step`）
+ */
 export const LogFeats = ['label', 'step'] as const;
 
+/** 内置功能型输出的联合类型。 */
 export type LogFeat = (typeof LogFeats)[number];
 
 /**
@@ -139,9 +147,8 @@ export interface LoggerContext {
  * @typedef {Partial<Omit<CTX, 'config' | 'namespace'> & { namespace?: string }>} LoggerSubContext
  * @description 用于创建子日志记录器的上下文，不包含 config，namespace 为单个字符串而非数组
  */
-export type LoggerSubContext<CTX extends LoggerContext> = Partial<
-  Omit<CTX, 'config' | 'namespace'> & { namespace?: string }
->;
+export type LoggerSubContext<CTX extends LoggerContext = LoggerContext> =
+  Partial<Omit<CTX, 'config' | 'namespace'> & { namespace?: string }>;
 
 /**
  * 包含所有日志级别的对象类型
@@ -150,7 +157,24 @@ export type LoggerSubContext<CTX extends LoggerContext> = Partial<
  */
 type LogWithLevels = { [x in LogLevel]: LogFunction };
 
+/**
+ * 具备内置功能型输出方法的对象类型。
+ *
+ * 说明：`label` / `step` 在默认实现中会映射到 `info` 级别输出，但会对内容做额外染色。
+ */
 type LogWithFeats = { [x in LogFeat]: LogFunction };
+
+interface LogWithConsole extends Pick<Console, 'table' | 'trace'> {
+  /**
+   * 输出一个空行
+   */
+  empty: () => void;
+  /**
+   * 展开输出对象
+   * @param obj - 要输出的对象
+   */
+  dir: (obj: unknown) => void;
+}
 
 /**
  * 支持集群操作的接口
@@ -162,7 +186,9 @@ interface WithCluster<CTX extends LoggerContext> {
   /**
    * 写入日志（更贴近“直写/流式”语义）
    *
-   * 说明：是否追加换行由底层 `CoreLogger.write` 的具体实现决定。
+   * 说明：
+   * - 是否追加换行由底层 `CoreLogger.write` 的具体实现决定。
+   * - 默认控制台实现（Node.js）会写入一行并追加换行；浏览器环境会降级为 `info` 打印。
    * @param ...msg 日志消息数组
    */
   write: LogFunction;
@@ -202,7 +228,7 @@ export const LOGGER_APPEND_CONFIG: unique symbol = Symbol(
  * @description 提供完整的日志记录功能，包括不同级别的日志方法和上下文管理
  */
 export interface Logger<CTX extends LoggerContext = LoggerContext>
-  extends LogWithLevels, LogWithFeats, WithCluster<CTX> {
+  extends LogWithConsole, LogWithLevels, LogWithFeats, WithCluster<CTX> {
   /**
    * 追加配置的内部方法
    * @param conf 要追加的配置对象
@@ -224,7 +250,7 @@ export interface Logger<CTX extends LoggerContext = LoggerContext>
    * setLevel('warn'); // 只显示 warn、error
    * setLevel('error'); // 只显示 error
    */
-  setLevel: (level: LogLevel) => void;
+  setLevel: (level?: LogLevel | null) => void;
   /**
    * 设置当前日志记录器的输出级别列表
    * @param levels - 日志级别列表
@@ -246,7 +272,9 @@ export interface Logger<CTX extends LoggerContext = LoggerContext>
  */
 export interface CoreLogger<CTX extends LoggerContext> {
   /**
-   * 写入日志（不进行换行）
+   * 写入日志（更贴近“直写/流式”语义）。
+   *
+   * 注意：是否追加换行由具体实现决定；接口层不做强约束。
    * @param context 日志上下文
    * @param ...msg 日志消息数组
    */

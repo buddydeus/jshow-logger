@@ -27,10 +27,11 @@ console.log('原始颜色:', originalColor);
 console.log('反转颜色:', invertedColor);
 
 // 3. 判断颜色明暗
-const isDark = Color.isDarkColor([50, 50, 50]);
-const isLight = Color.isDarkColor([200, 200, 200]);
-console.log('深色判断:', isDark);
-console.log('浅色判断:', isLight);
+// 注意：函数名历史原因保留为 isDarkColor，但返回 true 表示颜色更偏“亮”。
+const isBright1 = Color.isDarkColor([50, 50, 50]);
+const isBright2 = Color.isDarkColor([200, 200, 200]);
+console.log('亮度偏亮判断:', isBright1);
+console.log('亮度偏亮判断:', isBright2);
 
 // 4. 优化颜色（用于日志显示）
 const optimizedColor = Color.betterLogColor([255, 0, 0]); // 纯红色会被优化

@@ -87,7 +87,9 @@ export const isNodeEnvironment = () => {
     return true;
 
   return (
-    (typeof versions.deon === 'string' && versions.deon.length > 0) ||
+    // Deno
+    (typeof versions.deno === 'string' && versions.deno.length > 0) ||
+    // Bun
     (typeof versions.bun === 'string' && versions.bun.length > 0)
   );
 };

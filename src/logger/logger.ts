@@ -54,6 +54,17 @@ export const setLogLevel = (level: LogLevel) => {
   globalPrintLevel = level;
 };
 
+/**
+ * 设置全局“允许输出”的日志级别白名单。
+ *
+ * - 该白名单与阈值级别（`setLogLevel`）共同生效：必须同时通过“白名单包含”与“阈值比较”两项检查才会输出。
+ * - 传入重复值会自动去重；传入非法级别会被过滤。
+ *
+ * @param levels - 允许输出的日志级别列表（白名单）
+ * @example
+ * setLogLevels('info', 'error'); // 只允许 info 与 error（warn/debug 会被屏蔽）
+ * setLogLevels(...LogLevels); // 允许全部级别
+ */
 export const setLogLevels = (...levels: LogLevel[]) => {
   globalPrintLevels = Array.from(new Set(levels)).filter(v =>
     LogLevels.includes(v)
@@ -75,6 +86,12 @@ export const canPrintByLevel = (level: LogLevel, printLevel: LogLevel) => {
   return logLevelIndexMap[level] <= logLevelIndexMap[printLevel];
 };
 
+/**
+ * 通过“白名单包含”判断指定级别是否允许输出。
+ *
+ * @param level - 日志级别
+ * @param printLevels - 允许输出的日志级别集合（白名单）
+ */
 export const canPrintByContain = (level: LogLevel, printLevels: LogLevel[]) => {
   return printLevels.includes(level);
 };
@@ -111,29 +128,33 @@ const mergeContexts = (
   );
 };
 
+interface LoggerPrintLevel {
+  level: LogLevel | null;
+  levels: LogLevel[] | null;
+}
+
 /**
  * 创建日志记录器包装器
  * @function createLoggerWrap
  * @param {LoggerContext} context - 日志上下文
- * @param {LogLevel} [printLevel] - 可选的日志输出级别，如果未指定则使用全局级别
+ * @param {LogLevel | LogLevel[] | LoggerPrintLevel} [printLevel] - 可选的日志输出级别，如果未指定则使用全局级别
  * @returns {Logger<LoggerContext>} 日志记录器实例
  * @description 创建一个日志记录器实例，提供不同级别的日志方法和上下文管理功能
  * @private
  */
 const createLoggerWrap = (
   context: LoggerContext,
-  printLevel?: LogLevel | LogLevel[]
+  printLevel?: LogLevel | LogLevel[] | LoggerPrintLevel
 ): Logger<LoggerContext> => {
-  const currentPrintLevel = {
+  const currentPrintLevel: LoggerPrintLevel = {
     level: null,
     levels: null
-  } as {
-    level: LogLevel | null;
-    levels: LogLevel[] | null;
   };
 
-  const setLevel = (level: LogLevel | null) => {
-    currentPrintLevel.level = level;
+  const setLevel = (level?: LogLevel | null) => {
+    currentPrintLevel.level = LogLevels.includes(level as LogLevel)
+      ? level || null
+      : null;
   };
 
   const setLevels = (...levels: LogLevel[]) => {
@@ -143,12 +164,18 @@ const createLoggerWrap = (
         : Array.from(new Set(levels)).filter(v => LogLevels.includes(v));
   };
 
-  if (printLevel) {
-    if (Array.isArray(printLevel)) {
-      setLevels(...printLevel);
-    } else {
+  switch (typeof printLevel) {
+    case 'string':
       setLevel(printLevel);
-    }
+      break;
+    case 'object':
+      if (Array.isArray(printLevel)) {
+        setLevels(...printLevel);
+      } else {
+        setLevel(printLevel?.level);
+        setLevels(...(printLevel?.levels || []));
+      }
+      break;
   }
 
   const checkLevel = (level: LogLevel = 'debug') => {
@@ -188,7 +215,26 @@ const createLoggerWrap = (
     }
   };
 
+  const fork = (ctx: LoggerSubContext) => {
+    return createLoggerWrap(
+      {
+        ...mergeContexts(context, ctx),
+        config: context.config
+      },
+      currentPrintLevel
+    );
+  };
+
   return {
+    // eslint-disable-next-line no-console
+    empty: () => console.log(),
+    // eslint-disable-next-line no-console
+    table: (...args) => console.table(...args),
+    // eslint-disable-next-line no-console
+    trace: (...args) => console.trace(...args),
+    // eslint-disable-next-line no-console
+    dir: obj => console.dir(obj, { depth: null }),
+    // ----
     /** 记录错误级别日志 */
     error: (...msg) => print('error', ...msg),
     /** 记录警告级别日志 */
@@ -217,24 +263,14 @@ const createLoggerWrap = (
      * @param {LoggerSubContext<LoggerContext>} ctx - 子上下文配置
      * @returns {Logger<LoggerContext>} 新的日志记录器实例
      */
-    fork: ctx =>
-      createLoggerWrap({
-        ...mergeContexts(context, ctx),
-        config: context.config
-      }),
+    fork,
     /**
      * 在指定上下文中执行回调函数
      * @param {LoggerSubContext<LoggerContext>} ctx - 子上下文配置
      * @param {(logger: Logger<LoggerContext>) => unknown} cb - 回调函数
      * @returns {unknown} 回调函数的返回值
      */
-    scope: (ctx, cb) =>
-      cb(
-        createLoggerWrap({
-          ...mergeContexts(context, ctx),
-          config: context.config
-        })
-      ),
+    scope: (ctx, cb) => cb(fork(ctx)),
     // ----
     /**
      * 检查是否可以输出该级别的日志

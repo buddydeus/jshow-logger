@@ -39,17 +39,17 @@
 
 ## Features
 
-- 🎯 **Multiple Log Levels**: Support for `error`, `warn`, `info`, and `debug` levels
-- 🏷️ **Namespace Support**: Organize logs by module or feature using hierarchical namespaces
-- 🏷️ **Tags & Extra Info**: Add structured metadata to logs for better filtering and analysis
-- 🎨 **Color Support**: Beautiful colored output in both Node.js (ANSI) and Browser (CSS) environments
-- 📝 **Flexible Output**: Support for both text and JSON output formats
-- 🔧 **Highly Configurable**: Custom transformers, filters, and hooks for advanced use cases
-- 🪝 **Hooks Support**: Execute custom logic after log output (e.g., send to monitoring systems)
-- 🚫 **Filtering**: Built-in support for filtering logs by namespace using `DEBUG_IGNORE` environment variable
-- 🔍 **TypeScript**: Full TypeScript support with comprehensive type definitions
-- 🌐 **Cross-Platform**: Works in both Node.js and Browser environments
-- ⚡ **Lightweight**: Minimal dependencies, optimized for performance
+- **Multiple Log Levels**: Support for `error`, `warn`, `info`, and `debug` levels
+- **Namespace Support**: Organize logs by module or feature using hierarchical namespaces
+- **Tags & Extra Info**: Add structured metadata to logs for better filtering and analysis
+- **Color Support**: Beautiful colored output in both Node.js (ANSI) and Browser (CSS) environments
+- **Flexible Output**: Support for both text and JSON output formats
+- **Highly Configurable**: Custom transformers, filters, and hooks for advanced use cases
+- **Hooks Support**: Execute custom logic after log output (e.g., send to monitoring systems)
+- **Filtering**: Built-in support for filtering logs by namespace using `DEBUG_IGNORE` environment variable
+- **TypeScript**: Full TypeScript support with comprehensive type definitions
+- **Cross-Platform**: Works in both Node.js and Browser environments
+- **Lightweight**: Minimal dependencies, optimized for performance
 
 ---
 
@@ -440,8 +440,9 @@ const color = Color.makeColorHexFromText('error'); // Returns [r, g, b]
 // Invert color
 const inverted = Color.invertHex([255, 128, 64]);
 
-// Check if color is dark
-const isDark = Color.isDarkColor([50, 50, 50]);
+// Check if a color is "bright enough"
+// Note: the function name is historical; it returns true when the color is bright.
+const isBright = Color.isDarkColor([50, 50, 50]);
 
 // Optimize color for better log display
 const optimized = Color.betterLogColor([255, 0, 0]);

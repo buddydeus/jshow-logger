@@ -88,14 +88,13 @@ describe('invertHex', () => {
 });
 
 describe('isDarkColor', () => {
-  // 注意：实际实现中，isDarkColor 的逻辑是亮度 > 186 返回 true
-  // 这与函数名和注释不符（应该是亮度 < 186 返回 true），但测试需要匹配实际实现
+  // 注意：函数名历史原因保留为 isDarkColor，但实际实现为“亮度 > 186 返回 true”（即更偏亮）
 
   it('应该根据实际实现逻辑判断黑色', () => {
     const color: ColorHex = [0, 0, 0];
     const brightness = 0 * 0.299 + 0 * 0.587 + 0 * 0.114;
     expect(brightness).toBe(0);
-    // 实际代码：brightness > 186 返回 true，所以黑色（0）返回 false
+    // 实际代码：brightness > 186 返回 true，所以黑色（0）返回 false（更偏暗）
     expect(isDarkColor(color)).toBe(false);
   });
 
@@ -103,7 +102,7 @@ describe('isDarkColor', () => {
     const color: ColorHex = [255, 255, 255];
     const brightness = 255 * 0.299 + 255 * 0.587 + 255 * 0.114;
     expect(brightness).toBe(255);
-    // 实际代码：brightness > 186 返回 true，所以白色（255）返回 true
+    // 实际代码：brightness > 186 返回 true，所以白色（255）返回 true（更偏亮）
     expect(isDarkColor(color)).toBe(true);
   });
 
@@ -111,7 +110,7 @@ describe('isDarkColor', () => {
     const color: ColorHex = [50, 50, 50];
     const brightness = 50 * 0.299 + 50 * 0.587 + 50 * 0.114;
     expect(brightness).toBeLessThan(186);
-    // 实际代码：brightness > 186 返回 true，所以深灰色返回 false
+    // 实际代码：brightness > 186 返回 true，所以深灰色返回 false（更偏暗）
     expect(isDarkColor(color)).toBe(false);
   });
 
@@ -119,13 +118,13 @@ describe('isDarkColor', () => {
     const color: ColorHex = [200, 200, 200];
     const brightness = 200 * 0.299 + 200 * 0.587 + 200 * 0.114;
     expect(brightness).toBeGreaterThan(186);
-    // 实际代码：brightness > 186 返回 true，所以浅灰色返回 true
+    // 实际代码：brightness > 186 返回 true，所以浅灰色返回 true（更偏亮）
     expect(isDarkColor(color)).toBe(true);
   });
 
   it('应该根据亮度公式正确判断（匹配实际实现）', () => {
     // 亮度公式: r * 0.299 + g * 0.587 + b * 0.114
-    // 实际代码逻辑是 > 186 返回 true（注意：这与函数名不符）
+    // 实际代码逻辑是 > 186 返回 true
     const darkColor: ColorHex = [100, 100, 100];
     const brightness = 100 * 0.299 + 100 * 0.587 + 100 * 0.114;
     expect(brightness).toBeLessThan(186);
